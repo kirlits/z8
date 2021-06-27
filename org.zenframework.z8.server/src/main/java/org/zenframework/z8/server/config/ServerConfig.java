@@ -22,8 +22,6 @@ public class ServerConfig extends Properties {
 
 	static private final long serialVersionUID = 3564936578688816088L;
 
-	static private final String Splitter = "\\s*[,;]\\s*";
-
 	static private final String Z8SystemPrefix = "z8.";
 
 	static private final String localhost = "localhost";
@@ -144,7 +142,7 @@ public class ServerConfig extends Properties {
 	static private int webServerHttpPort;
 	static private File webServerWebapp;
 	static private String webServerMappings;
-	static private String[] webServerUrlPatterns;
+	static private String webServerUrlPatterns;
 
 	static private Map<String, String> webServerServletParams;
 
@@ -254,7 +252,7 @@ public class ServerConfig extends Properties {
 			webServerWebapp = new File(workingPath, getProperty(WebServerWebapp, ".."));
 
 		webServerMappings = getProperty(WebServerMappings);
-		webServerUrlPatterns = getProperty(WebServerUrlPatterns, new String[] {});
+		webServerUrlPatterns = getProperty(WebServerUrlPatterns);
 
 		webServerServletParams = filterParameters(WebServerServletConfigPrefix);
 
@@ -351,7 +349,7 @@ public class ServerConfig extends Properties {
 		if(value == null || value.trim().isEmpty())
 			return defaultValue;
 
-		String[] values = value.split(Splitter);
+		String[] values = value.split("\\,");
 
 		String[] result = new String[values.length];
 
@@ -367,7 +365,7 @@ public class ServerConfig extends Properties {
 		if(value == null || value.trim().isEmpty())
 			return defaultValue;
 
-		String[] values = value.split(Splitter);
+		String[] values = value.split("\\,");
 
 		int[] result = new int[values.length];
 
@@ -524,7 +522,7 @@ public class ServerConfig extends Properties {
 		return webServerMappings;
 	}
 
-	static public String[] webServerUrlPatterns() {
+	static public String webServerUrlPatterns() {
 		return webServerUrlPatterns;
 	}
 

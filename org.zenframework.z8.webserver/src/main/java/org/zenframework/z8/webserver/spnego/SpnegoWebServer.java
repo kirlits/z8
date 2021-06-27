@@ -12,8 +12,9 @@ import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.SpnegoLoginService;
 import org.eclipse.jetty.server.Authentication;
 import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.gzip.GzipHandler;
+import org.eclipse.jetty.server.session.HashSessionManager;
 import org.eclipse.jetty.server.session.SessionHandler;
+import org.eclipse.jetty.servlets.gzip.GzipHandler;
 import org.eclipse.jetty.util.security.Constraint;
 import org.zenframework.z8.server.config.ServerConfig;
 import org.zenframework.z8.server.engine.IWebServer;
@@ -22,7 +23,6 @@ import org.zenframework.z8.web.server.SingleSignOnAdapter;
 /**
  * This server supports kerberos authentication
  */
-@SuppressWarnings("deprecation")
 public class SpnegoWebServer extends org.zenframework.z8.webserver.WebServer implements IWebServer {
 	// TODO temporary until upgrade jetty up to 9.4
 	protected ConstraintSecurityHandler securityHandler;
@@ -52,7 +52,7 @@ public class SpnegoWebServer extends org.zenframework.z8.webserver.WebServer imp
 		securityHandler.setConstraintMappings(new ConstraintMapping[]{cm});
 		securityHandler.setRealmName(domainRealm);
 
-		SessionHandler sessions = new SessionHandler() {
+		SessionHandler sessions = new SessionHandler(new HashSessionManager()) {
 			/**
 			 * The method additionally extracts from the session {@link Authentication} object
 			 * to put it in the request
