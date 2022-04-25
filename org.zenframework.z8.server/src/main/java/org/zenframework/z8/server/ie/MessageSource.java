@@ -117,6 +117,14 @@ public class MessageSource implements RmiSerializable, Serializable {
 		return files;
 	}
 
+	public Collection<RecordInfo> inserts() {
+		return inserts;
+	}
+
+	public Collection<RecordInfo> updates() {
+		return updates;
+	}
+
 	public void exportData() {
 		Map<String, Boolean> recordStates = new HashMap<String, Boolean>();
 		ApplicationServer.setEventsLevel(EventsLevel.NONE);

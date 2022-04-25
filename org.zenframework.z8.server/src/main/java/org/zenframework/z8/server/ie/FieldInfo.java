@@ -27,6 +27,10 @@ public class FieldInfo implements RmiSerializable, Serializable {
 	public String name() {
 		return name;
 	}
+	
+	public void setName(String name) {
+		this.name = name;
+	}
 
 	public primary value() {
 		return value;
