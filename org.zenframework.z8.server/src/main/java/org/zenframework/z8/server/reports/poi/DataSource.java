@@ -7,9 +7,11 @@ import org.zenframework.z8.server.types.integer;
 
 public abstract class DataSource {
 	public static final String Index = "index";
+	public static final String Sheet = "sheet";
 
 	protected Range range;
 	protected Wrapper<integer> index;
+	protected Wrapper<integer> sheet;
 	private boolean initialized = false;
 
 	public DataSource setRange(Range range) {
@@ -36,6 +38,7 @@ public abstract class DataSource {
 
 	public void open() {
 		index.set(new integer(-1));
+		sheet.set(new integer(range.getSheet()));
 	}
 
 	public boolean next() {
@@ -60,6 +63,7 @@ public abstract class DataSource {
 	protected void initialize() {
 		initialized = true;
 		index = getObjectProperty(Index);
+		sheet = getObjectProperty(Sheet);
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })

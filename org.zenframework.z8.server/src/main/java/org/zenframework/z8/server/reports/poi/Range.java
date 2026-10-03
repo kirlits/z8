@@ -48,6 +48,8 @@ public class Range {
 	private Vector groupStartPosition = null;
 	private Vector lastResize = new Vector();
 	private SheetModifier.CellVisitor customVisitor = null;
+	private int sheet;
+	private String sheetName;
 
 	private final List<Range> ranges = new ArrayList<Range>();
 	private final Set<Block> subtotalMerges = new HashSet<Block>();
@@ -81,6 +83,24 @@ public class Range {
 
 	public Range setSource(DataSource source) {
 		this.source = source.setRange(this);
+		return this;
+	}
+
+	public int getSheet() {
+		return parent != null ? parent.getSheet() : sheet;
+	}
+
+	public Range setSheet(int sheet) {
+		this.sheet = sheet;
+		return this;
+	}
+
+	public String getSheetName() {
+		return sheetName;
+	}
+
+	public Range setSheetName(String sheetName) {
+		this.sheetName = sheetName;
 		return this;
 	}
 

@@ -32,6 +32,7 @@ public class Range extends OBJECT {
 	public static final String SubtotalsBy = "subtotalsBy";
 	public static final String SubtotalsMerge = "subtotalsMerge";
 	public static final String Merge = "merge";
+	public static final String SheetName = "sheetName";
 
 	// Records insertion axis
 	public static final integer Vertical = new integer(0);
@@ -79,13 +80,18 @@ public class Range extends OBJECT {
 		return getAttribute(Merge);
 	}
 
+	public String getSheetName() {
+		return getAttribute(SheetName);
+	}
+
 	public org.zenframework.z8.server.reports.poi.Range asPoiRange(Report report) {
 		report.registerDataSource(source.get());
 
 		org.zenframework.z8.server.reports.poi.Range range = new org.zenframework.z8.server.reports.poi.Range()
 				.setName(index()).setSource(source.get().get()).setBlock(getAddress()).setBoundaries(getBoundaries())
 				.setAxis(getAxis()).setAggregation(isTotals()).setSubtotalsBy(getSubtotalsBy())
-				.setSubtotalBlock(getSubtotalBlock()).setMerges(getMerge()).setSubtotalMerges(getSubtotalsMerge());
+				.setSubtotalBlock(getSubtotalBlock()).setMerges(getMerge()).setSubtotalMerges(getSubtotalsMerge())
+				.setSheetName(getSheetName());
 
 		for (Range.CLASS<Range> subrange : ranges)
 			range.addRange(subrange.get().asPoiRange(report));

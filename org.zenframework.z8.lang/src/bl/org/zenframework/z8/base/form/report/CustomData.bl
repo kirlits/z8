@@ -4,6 +4,7 @@ import org.zenframework.z8.lang.Object;
 public class CustomData extends Object {
 
 	public int getIndex();
+	public int getSheet();
 
 	virtual public int count();
 	virtual public void open();

@@ -28,6 +28,11 @@ public class CustomData extends OBJECT {
 		return ((Wrapper<integer>) getMember(org.zenframework.z8.server.reports.poi.DataSource.Index).get()).get();
 	}
 
+	@SuppressWarnings("unchecked")
+	public integer z8_getSheet() {
+		return ((Wrapper<integer>) getMember(org.zenframework.z8.server.reports.poi.DataSource.Sheet).get()).get();
+	}
+
 	public integer z8_count() {
 		return new integer(0);
 	}
