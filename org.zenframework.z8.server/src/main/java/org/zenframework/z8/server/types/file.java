@@ -141,7 +141,7 @@ public class file extends primary implements RmiSerializable, Serializable {
 		operatorAssign(path);
 	}
 
-	protected file(JsonObject json) {
+	public file(JsonObject json) {
 		super();
 		set(json);
 	}
