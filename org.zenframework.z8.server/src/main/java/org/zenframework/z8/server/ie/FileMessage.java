@@ -25,6 +25,8 @@ public class FileMessage extends Message {
 	static private final long serialVersionUID = 3103056307172568573L;
 
 	static public final string RecordId = new string("message.recordId");
+	
+	public static final String JsonFile = "file";
 
 	static public class CLASS<T extends FileMessage> extends Message.CLASS<T> {
 		public CLASS() {
@@ -144,14 +146,13 @@ public class FileMessage extends Message {
 	}
 
 	@Override
-	public JsonObject toJson() {
-		JsonObject result = new JsonObject();
-		result.put("id", getId());
-		result.put("sender", getSender());
-		result.put("address", getAddress());
-		result.put("class", getCLASS().name());
-		result.put("file", file.toJsonObject());
+	protected JsonObject fillSpecificJsonFields(JsonObject json) {
+		json.put(JsonFile, file.toJsonObject());
+		return json;
+	}
 
-		return result;
+	@Override
+	protected void initSpecificFields(JsonObject json) {
+		this.setFile(new file(json.getJsonObject(JsonFile)));
 	}
 }

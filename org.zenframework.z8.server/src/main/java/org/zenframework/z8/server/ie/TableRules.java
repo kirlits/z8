@@ -16,6 +16,11 @@ import org.zenframework.z8.server.types.guid;
 public class TableRules implements RmiSerializable, Serializable {
 	private static final long serialVersionUID = 7712259310049227053L;
 
+	private static final String JsonDefaultPolicy = "defaultPolicy";
+	private static final String JsonRecords = "records";
+	private static final String JsonFields = "fields";
+	private static final String JsonRecordFields = "recordFields";
+
 	private Map<guid, Map<String, ImportPolicy>> recordFields = new HashMap<guid, Map<String, ImportPolicy>>();
 	private Map<guid, ImportPolicy> records = new HashMap<guid, ImportPolicy>();
 	private Map<String, ImportPolicy> fields = new HashMap<String, ImportPolicy>();
@@ -125,20 +130,46 @@ public class TableRules implements RmiSerializable, Serializable {
 
 	public JsonObject toJson() {
 		JsonObject result = new JsonObject();
-		result.put("defaultPolicy", defaultPolicy.name());
+		result.put(JsonDefaultPolicy, defaultPolicy.name());
 		JsonObject recordsObject = new JsonObject();
 		records.forEach((key, value) -> recordsObject.put(key.toString(), value.name()));
-		result.put("records", recordsObject);
+		result.put(JsonRecords, recordsObject);
 		JsonObject fieldsObject = new JsonObject();
 		fields.forEach((key, value) -> fieldsObject.put(key, value.name()));
-		result.put("fields", fieldsObject);
+		result.put(JsonFields, fieldsObject);
 		JsonObject recordFieldsObject = new JsonObject();
 		recordFields.forEach((key, value) -> {
 			JsonObject innerJson = new JsonObject();
 			value.forEach((innerKey, innerValue) -> innerJson.put(innerKey, innerValue.name()));
 			recordFieldsObject.put(key.toString(), innerJson);
 		});
-		result.put("recordFields", recordFieldsObject);
+		result.put(JsonRecordFields, recordFieldsObject);
+
+		return result;
+	}
+
+	public static TableRules parseJson(JsonObject json) {
+		TableRules result = new TableRules(ImportPolicy.valueOf(json.getString(JsonDefaultPolicy)));
+
+		JsonObject recordsObject = json.getJsonObject(JsonRecords);
+		Map<guid, ImportPolicy> records = new HashMap<guid, ImportPolicy>();
+		recordsObject.keySet().forEach(key -> records.put(new guid(key), ImportPolicy.valueOf(recordsObject.getString(key))));
+		result.records = records;
+
+		JsonObject fieldsObject = json.getJsonObject(JsonFields);
+		Map<String, ImportPolicy> fields = new HashMap<String, ImportPolicy>();
+		fieldsObject.keySet().forEach(key -> fields.put(key, ImportPolicy.valueOf(recordsObject.getString(key))));
+		result.fields = fields;
+
+		JsonObject recordFieldsObject = json.getJsonObject(JsonRecordFields);
+		Map<guid, Map<String, ImportPolicy>> recordFields = new HashMap<guid, Map<String, ImportPolicy>>();
+		recordFieldsObject.keySet().forEach(key -> {
+			JsonObject innerJson = recordFieldsObject.getJsonObject(key);
+			Map<String, ImportPolicy> innerMap = new HashMap<String, ImportPolicy>();
+			innerJson.keySet().forEach(innerKey -> innerMap.put(innerKey, ImportPolicy.valueOf(innerJson.getString(innerKey))));
+			recordFields.put(new guid(key), innerMap);
+		});
+		result.recordFields = recordFields;
 
 		return result;
 	}

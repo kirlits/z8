@@ -26,6 +26,10 @@ public class DataMessage extends Message {
 
 	static public final string RecordId = new string("message.recordId");
 
+	public static final String JsonType = "type";
+	public static final String JsonDescription = "description";
+	public static final String JsonSource = "body";
+
 	static public class CLASS<T extends DataMessage> extends Message.CLASS<T> {
 		public CLASS() {
 			this(null);
@@ -274,16 +278,18 @@ public class DataMessage extends Message {
 	}
 
 	@Override
-	public JsonObject toJson() {
-		JsonObject result = new JsonObject();
-		result.put("id", getId());
-		result.put("sender", getSender());
-		result.put("address", getAddress());
-		result.put("class", getCLASS().name());
-		result.put("type", type);
-		result.put("description", description.toString());
-		result.put("body", source.toJson());
+	protected JsonObject fillSpecificJsonFields(JsonObject json) {
+		json.put(JsonType, type);
+		json.put(JsonDescription, description.toString());
+		json.put(JsonSource, source.toJson());
 
-		return result;
+		return json;
+	}
+
+	@Override
+	protected void initSpecificFields(JsonObject json) {
+		this.setType(json.getString(JsonType));
+		this.setDescription(json.getString(JsonDescription));
+		this.setSource(MessageSource.parseJson(json.getJsonObject(JsonSource)));
 	}
 }

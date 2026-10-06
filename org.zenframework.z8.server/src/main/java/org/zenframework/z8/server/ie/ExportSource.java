@@ -15,11 +15,17 @@ import org.zenframework.z8.server.db.sql.SqlToken;
 import org.zenframework.z8.server.engine.RmiIO;
 import org.zenframework.z8.server.engine.RmiSerializable;
 import org.zenframework.z8.server.engine.Runtime;
+import org.zenframework.z8.server.json.parser.JsonArray;
 import org.zenframework.z8.server.json.parser.JsonObject;
 import org.zenframework.z8.server.types.guid;
 
+
 public class ExportSource implements RmiSerializable, Serializable {
 	private static final long serialVersionUID = 9093748008996862263L;
+
+	public static final String JsonTableName = "tableName";
+	public static final String JsonFields = "fields";
+	public static final String JsonRecords= "records";
 
 	private String tableName;
 	private Collection<String> fieldNames;
@@ -140,9 +146,30 @@ public class ExportSource implements RmiSerializable, Serializable {
 
 	public JsonObject toJson() {
 		JsonObject result = new JsonObject();
-		result.put("tableName", tableName);
-		result.put("records", records);
-		result.put("fields", fieldNames);
+		result.put(JsonTableName, tableName);
+		result.put(JsonRecords, records);
+		result.put(JsonFields, fieldNames);
+		return result;
+	}
+
+	public static ExportSource parseJson(JsonObject json) {
+		ExportSource result = new ExportSource();
+		result.tableName = json.getString(JsonTableName);
+		//result.table = result.table();
+
+		JsonArray jsonRecords = json.getJsonArray(JsonRecords);
+		Collection<guid> records = new ArrayList<guid>();
+		for(int i = 0; i < jsonRecords.size(); i++)
+			records.add(jsonRecords.getGuid(i));
+		result.records = records;
+
+		JsonArray jsonFieldNames = json.getJsonArray(JsonFields);
+		Collection<String> fieldNames = new ArrayList<String>();
+		for(int i = 0; i < jsonFieldNames.size(); i++)
+			fieldNames.add(jsonFieldNames.getString(i));
+		result.fieldNames = fieldNames;
+		//result.fields = result.fields();
+
 		return result;
 	}
 }

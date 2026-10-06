@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -54,6 +55,11 @@ abstract public class Message extends OBJECT implements RmiSerializable, Seriali
 
 	static protected final String FileUrlPrefix = "file:";
 
+	public static final String JsonClass = "class"; 
+	public static final String JsonId = "id"; 
+	public static final String JsonSender = "sender"; 
+	public static final String JsonAddress = "address"; 
+
 	public static final integer Fail = new integer(0);
 	public static final integer Retry = new integer(1);
 	public static final integer Cancel = new integer(2);
@@ -83,7 +89,46 @@ abstract public class Message extends OBJECT implements RmiSerializable, Seriali
 	private String address;
 	private int failAction = Fail.getInt();
 
-	abstract public JsonObject toJson();
+	// JSON
+	public JsonObject toJson() {
+		JsonObject result = new JsonObject();
+		result.put(JsonId, getId());
+		result.put(JsonSender, getSender());
+		result.put(JsonAddress, getAddress());
+		result.put(JsonClass, getCLASS().name());
+
+		return fillSpecificJsonFields(result);
+	}
+
+	abstract protected JsonObject fillSpecificJsonFields(JsonObject json);
+
+	public static Message parseJson(JsonObject json) {
+		Message message = createInstance(json.getString(JsonClass), null);
+		message.initCommonFields(json);
+		message.initSpecificFields(json);
+
+		return message;
+	}
+
+	abstract protected void initSpecificFields(JsonObject json);
+
+	private void initCommonFields(JsonObject json) {
+		this.setId(json.getGuid(JsonId));
+		this.setSender(json.getString(JsonSender));
+		this.setAddress(json.getString(JsonAddress));
+	}
+
+	private static Message createInstance(String className, IObject container) {
+		try {
+			Class<?> clazz = Class.forName(className);
+			Constructor<?> constructor = clazz.getDeclaredConstructor(IObject.class);
+			Object instance = constructor.newInstance(container);
+			return Message.class.cast(instance);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	// JSON ENDS
 
 	abstract public void setBytesTransferred(long bytesTransferred);
 

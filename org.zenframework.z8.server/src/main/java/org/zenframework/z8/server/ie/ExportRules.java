@@ -15,6 +15,9 @@ import org.zenframework.z8.server.types.guid;
 public class ExportRules implements RmiSerializable, Serializable {
 	private static final long serialVersionUID = -1372906719057513100L;
 
+	private static final String JsonDefaultPolicy = "defaultPolicy";
+	private static final String JsonTableRules = "tables";
+
 	private Map<String, TableRules> tables = new HashMap<String, TableRules>();
 	private ImportPolicy defaultPolicy = ImportPolicy.Default;
 
@@ -86,11 +89,23 @@ public class ExportRules implements RmiSerializable, Serializable {
 
 	public JsonObject toJson() {
 		JsonObject result = new JsonObject();
-		result.put("defaultPolicy", defaultPolicy.name());
+		result.put(JsonDefaultPolicy, defaultPolicy.name());
 	
 		JsonObject tableRules = new JsonObject();
 		tables.forEach((key, value) -> tableRules.put(key, value.toJson()));
-		result.put("tableRules", tableRules);
+		result.put(JsonTableRules, tableRules);
+
+		return result;
+	}
+
+	public static ExportRules parseJson(JsonObject json) {
+		ExportRules result = new ExportRules();
+		result.add(ImportPolicy.valueOf(json.getString(JsonDefaultPolicy)));
+
+		JsonObject tableRules = json.getJsonObject(JsonTableRules);
+		Map<String, TableRules> tables = new HashMap<String, TableRules>();
+		tableRules.keySet().forEach(key -> tables.put(key, TableRules.parseJson(tableRules.getJsonObject(key))));
+		result.tables = tables;
 
 		return result;
 	}

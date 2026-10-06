@@ -36,6 +36,14 @@ public class MessageSource implements RmiSerializable, Serializable {
 	// MARK - в новой версии serialVersionUID кончается на 9, а не 8
 	private static final long serialVersionUID = -145929531248527278L;
 
+	public static final String JsonExportAll = "exportAll";
+	public static final String JsonSkipFiles = "skipFiles";
+	public static final String JsonProperties = "properties";
+	public static final String JsonInserts = "inserts";
+	public static final String JsonUpdates = "updates";
+	public static final String JsonSources = "data";
+	public static final String JsonRules= "rules";
+
 	private static class Cache {
 		final Map<String, Table> tables = new HashMap<String, Table>();
 		final Map<String, Field> fields = new HashMap<String, Field>();
@@ -498,24 +506,54 @@ public class MessageSource implements RmiSerializable, Serializable {
 	public void setSkipFiles(boolean skipFiles) {
 		this.skipFiles = skipFiles;
 	}
+	
+	public static MessageSource parseJson(JsonObject json) {
+		MessageSource source = new MessageSource();
+		source.setExportAll(json.getBoolean(JsonExportAll));
+		source.setSkipFiles(json.getBoolean(JsonSkipFiles));
+
+		JsonObject jsonProperties = json.getJsonObject(JsonProperties);
+		jsonProperties.keySet().forEach((key) -> source.properties.put(key, primary.parseJson(jsonProperties.getJsonObject(key))));
+
+		JsonArray records = json.getJsonArray(JsonSources);
+		Collection<ExportSource> sources = new ArrayList<ExportSource>();
+		for(int i = 0; i < records.size(); i++)
+			sources.add(ExportSource.parseJson(records.getJsonObject(i)));
+		source.sources = sources;
+
+		source.exportRules = ExportRules.parseJson(json.getJsonObject(JsonRules));
+		source.setInserts(parseRecordInfoJson(json.getJsonArray(JsonInserts)));
+		source.setUpdates(parseRecordInfoJson(json.getJsonArray(JsonUpdates)));
+
+		return source;
+	}
+
+	private static Collection<RecordInfo> parseRecordInfoJson(JsonArray infos) {
+		Collection<RecordInfo> result = new ArrayList<RecordInfo>();
+		for(int i = 0; i < infos.size(); i++)
+			result.add(RecordInfo.parseJson(infos.getJsonObject(i)));
+		return result;
+	}
 
 	public JsonObject toJson() {
 		JsonObject result = new JsonObject();
-		result.put("exportAll", exportAll);
-		result.put("skipFiles", skipFiles);
-		result.put("properties", properties);
+		result.put(JsonExportAll, exportAll);
+		result.put(JsonSkipFiles, skipFiles);
+		JsonObject jsonProperties = new JsonObject();
+		properties.forEach((key, value) -> jsonProperties.put(key, value.toJson()));
+		result.put(JsonProperties, jsonProperties);
 
 		JsonArray records = new JsonArray();
 		sources.forEach(src -> records.put(src.toJson()));
-		result.put("data", records);
-		result.put("rules", exportRules.toJson());
-		result.put("inserts", getRecordInfoJson(inserts));
-		result.put("updates", getRecordInfoJson(updates));
+		result.put(JsonSources, records);
+		result.put(JsonRules, exportRules.toJson());
+		result.put(JsonInserts, getRecordInfoJson(inserts));
+		result.put(JsonUpdates, getRecordInfoJson(updates));
 
 		return result;
 	}
-	
-	private JsonArray getRecordInfoJson(Collection<RecordInfo> infos) {
+
+	private static JsonArray getRecordInfoJson(Collection<RecordInfo> infos) {
 		JsonArray result = new JsonArray();
 		infos.forEach(info -> result.put(info.toJson()));
 		return result;

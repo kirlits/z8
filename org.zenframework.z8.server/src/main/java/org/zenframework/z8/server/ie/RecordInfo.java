@@ -11,6 +11,7 @@ import org.zenframework.z8.server.engine.RmiIO;
 import org.zenframework.z8.server.engine.RmiSerializable;
 import org.zenframework.z8.server.json.parser.JsonObject;
 import org.zenframework.z8.server.types.guid;
+import org.zenframework.z8.server.types.primary;
 
 public class RecordInfo implements RmiSerializable, Serializable {
 	private static final long serialVersionUID = 8082764538622310343L;
@@ -81,8 +82,16 @@ public class RecordInfo implements RmiSerializable, Serializable {
 		result.put("id", id);
 		result.put("table", table);
 		JsonObject infos = new JsonObject();
-		fields.forEach(field -> infos.put(field.name(), field.value().toString()));
+		fields.forEach(field -> infos.put(field.name(), field.value().toJson()));
 		result.put("fields", infos);
+
+		return result;
+	}
+
+	public static RecordInfo parseJson(JsonObject json) {
+		RecordInfo result = new RecordInfo(json.getGuid("id"), json.getString("table"));
+		JsonObject infos = json.getJsonObject("fields");
+		infos.keySet().forEach(key -> result.add(new FieldInfo(key, primary.parseJson(infos.getJsonObject(key)))));
 
 		return result;
 	}
