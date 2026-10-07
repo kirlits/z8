@@ -158,7 +158,7 @@ public class DataMessage extends Message {
 	public void z8_setName(string name) {
 		setName(name.get());
 	}
-	
+
 	public string z8_getType() {
 		return new string(type);
 	}
@@ -247,6 +247,17 @@ public class DataMessage extends Message {
 			z8_addRule(recordId, field, policy);
 	}
 	
+	public void z8_addRule(RCollection<ExportRule.CLASS<? extends ExportRule>> rules) {
+		if(rules != null)
+			for(ExportRule.CLASS<? extends ExportRule> rule : rules)
+				z8_addRule(rule);
+	}
+
+	public void z8_addRule(ExportRule.CLASS<? extends ExportRule> rule) {
+		if(rule != null)
+			source.addRule(rule.get());
+	}
+
 	public void z8_setExportAll(bool exportAll) {
 		source.setExportAll(exportAll.get());
 	}
@@ -254,7 +265,7 @@ public class DataMessage extends Message {
 	public void z8_setSkipFiles(bool skipFiles) {
 		source.setSkipFiles(skipFiles.get());
 	}
-	
+
 	public bool z8_isExportAll() {
 		return new bool(source.isExportAll());
 	}
@@ -262,11 +273,11 @@ public class DataMessage extends Message {
 	public FileMessage newFileMessage() {
 		return z8_newFileMessage().get();
 	}
-	
+
 	public FileMessage.CLASS<? extends FileMessage> z8_newFileMessage() {
 		return new FileMessage.CLASS<FileMessage>(null);
 	}
-	
+
 	private void addDescription(Table.CLASS<? extends Table> table, int recordsCount) {
 		if (recordsCount == 0)
 			return;
