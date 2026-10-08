@@ -43,6 +43,8 @@ import sun.rmi.transport.LiveRef;
 public class RmiIO extends ObjectIO {
 	static private Map<String, Constructor<?>> constructors = Collections.synchronizedMap(new HashMap<String, Constructor<?>>());
 	static private Map<String, Class<?>> classes = Collections.synchronizedMap(new HashMap<String, Class<?>>());
+	@SuppressWarnings("unchecked")
+	private static final IOFactoryManager<RmiFactory<Object>> rmiFactoryManager = IOFactoryManager.getInstance((Class<RmiFactory<Object>>) (Class<?>) RmiFactory.class);
 
 	static private Constructor<?> getConstructor(String name, Class<?>[] parameters) {
 		try {
@@ -212,12 +214,16 @@ public class RmiIO extends ObjectIO {
 	protected void writeObject(ObjectOutputStream out, Object object) throws IOException {
 		if(object instanceof RmiServer)
 			object = ((RmiServer)object).proxy();
-
 		if(object == null) {
 			writeByte(out, RmiIOType.Null);
+			return;
+		}
 
-			// primitives
-		} else if(object instanceof Boolean) {
+		Class<?> objectClass = object.getClass();
+		RmiFactory<Object> rmiFactory = rmiFactoryManager.getFactory(objectClass);
+
+		// primitives
+		if(object instanceof Boolean) {
 			writeByte(out, RmiIOType.Boolean);
 			writeBoolean(out, (Boolean)object);
 		} else if(object instanceof Byte) {
@@ -288,6 +294,10 @@ public class RmiIO extends ObjectIO {
 		} else if(object instanceof RmiSerializable) {
 			writeByte(out, RmiIOType.Self);
 			writeSerializable(out, (RmiSerializable)object);
+		} else if(rmiFactory != null) {
+			writeByte(out, RmiIOType.FactoryObject); 
+			writeString(out, objectClass.getName());
+			rmiFactory.toRmi(object, out);
 		} else if(object instanceof Enum<?>) {
 			writeByte(out, RmiIOType.Enum);
 			writeEnum(out, (Enum<?>)object);
@@ -472,6 +482,17 @@ public class RmiIO extends ObjectIO {
 		return serializable;
 	}
 
+	public static Object readFactoryObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+		String cls = readString(in);
+		Class<?> clazz = getClass(cls);
+		RmiFactory<Object> rmiFactory = rmiFactoryManager.getFactory(clazz);
+
+		if (rmiFactory == null) {
+			throw new IOException("RmiIO: Dynamic RmiFactory not found for registered SPI class: " + cls);
+		}
+		return rmiFactory.fromRmi(in);
+	}
+
 	static public primary readPrimary(ObjectInputStream in) throws IOException, ClassNotFoundException {
 		byte type = readByte(in);
 
@@ -555,6 +576,8 @@ public class RmiIO extends ObjectIO {
 			return readOBJECT(in);
 		else if(id == RmiIOType.Self)
 			return readSerializable(in);
+		else if(id == RmiIOType.FactoryObject)
+			return readFactoryObject(in);
 		else if(id == RmiIOType.Enum)
 			return readEnum(in);
 

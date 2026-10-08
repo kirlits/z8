@@ -3,6 +3,7 @@ package org.zenframework.z8.server.engine;
 public class RmiIOType {
 	public static final byte Null = 1;
 	public static final byte Self = 2;
+	public static final byte FactoryObject = 3;
 
 	public static final byte String = 10;
 	public static final byte Integer = 11;
