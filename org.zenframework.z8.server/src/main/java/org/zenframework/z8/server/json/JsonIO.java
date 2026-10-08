@@ -8,8 +8,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.ServiceLoader;
 
+import org.zenframework.z8.server.engine.IOFactoryManager;
 import org.zenframework.z8.server.json.parser.JsonArray;
 import org.zenframework.z8.server.json.parser.JsonObject;
 import org.zenframework.z8.server.types.primary;
@@ -32,20 +32,8 @@ public class JsonIO {
 	private static final Map<String, Constructor<?>> constructors = Collections.synchronizedMap(new HashMap<String, Constructor<?>>());
 	//private static final ThreadLocal<Map<OBJECT, String>> visitedObjects = ThreadLocal.withInitial(IdentityHashMap::new);
 	//private static final ThreadLocal<Map<String, Object>> deserializedObjects = ThreadLocal.withInitial(java.util.HashMap::new);
-	private static final Map<Class<?>, JsonFactory<?>> spiFactories;
-	private static final Map<Class<?>, JsonFactory<?>> factoryCache = Collections.synchronizedMap(new HashMap<>());
-
-	static {
-		Map<Class<?>, JsonFactory<?>> map = new HashMap<>();
-		@SuppressWarnings("rawtypes")
-		ServiceLoader<JsonFactory> loader = ServiceLoader.load(JsonFactory.class);
-		for (JsonFactory<?> factory : loader) {
-			if (factory.getSupportedClass() != null) {
-				map.put(factory.getSupportedClass(), factory);
-			}
-		}
-		spiFactories = Collections.unmodifiableMap(map);
-	}
+	@SuppressWarnings("unchecked")
+	private static final IOFactoryManager<JsonFactory<Object>> jsonFactoryManager = IOFactoryManager.getInstance((Class<JsonFactory<Object>>) (Class<?>) JsonFactory.class);
 
 	private JsonIO() { }
 
@@ -87,24 +75,6 @@ public class JsonIO {
 			throw new RuntimeException("JsonIO: Failed to instantiate class " + name, e);
 		}
 	}
-
-	private static JsonFactory<?> findFactory(Class<?> currentClass) {
-		if (factoryCache.containsKey(currentClass)) {
-			return factoryCache.get(currentClass);
-		}
-
-		JsonFactory<?> factory = null;
-		for(Class<?> clazz = currentClass; clazz != null && clazz != Object.class && factory == null; clazz = clazz.getSuperclass()) {
-			if (factoryCache.containsKey(clazz)) {
-				factory = factoryCache.get(clazz);
-				break;
-			}
-			factory = spiFactories.get(clazz);
-		}
-
-		factoryCache.put(currentClass, factory);
-		return factory;
-	}
 	// --- END REFLECTION INFRASTRUCTURE ---
 
 	public static JsonObject toJson(Object object) throws IOException {
@@ -119,8 +89,7 @@ public class JsonIO {
 
 		JsonObject json = new JsonObject();
 		Class<?> objectClass = object.getClass();
-		@SuppressWarnings("unchecked")
-		JsonFactory<Object> objectFactory = (JsonFactory<Object>)findFactory(objectClass);
+		JsonFactory<Object> objectFactory = jsonFactoryManager.getFactory(objectClass);
 		json.put(JsonClass, objectClass.getName());
 
 		// --- Standard Java Primitives & Basic Types ---
@@ -167,6 +136,8 @@ public class JsonIO {
 		/*} else if (object instanceof OBJECT) {
 			OBJECT obj = (OBJECT) object;
 			json.put(JsonValue, serializeOBJECT(obj, currentPath));*/
+		} else if (object instanceof Enum<?>) {
+			json.put(JsonValue, ((Enum<?>) object).name());
 		} else {
 			json.put(JsonValue, object.toString());
 		}
@@ -196,8 +167,7 @@ public class JsonIO {
 		}*/
 
 		Class<?> clazz = getClass(className);
-		@SuppressWarnings("unchecked")
-		JsonFactory<Object> objectFactory = (JsonFactory<Object>)findFactory(clazz);
+		JsonFactory<Object> objectFactory = jsonFactoryManager.getFactory(clazz);
 
 		try {
 			// --- Standard Java Primitives & Basic Types ---
@@ -254,6 +224,11 @@ public class JsonIO {
 			/*} else if (OBJECT.class.isAssignableFrom(clazz)) {
 				JsonObject value = json.getJsonObject(JsonValue);
 				return deserializeOBJECT(value, className, path);*/
+			} else if (clazz.isEnum()) {
+				String enumName = json.getString(JsonValue);
+				@SuppressWarnings({ "unchecked", "rawtypes" })
+				Object enumConstant = Enum.valueOf((Class<Enum>) clazz, enumName);
+				return enumConstant;
 			} else {
 				// Fallback matching the exact toJson logic structure
 				String rawValue = json.getString(JsonValue);
