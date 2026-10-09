@@ -1,8 +1,6 @@
 package org.zenframework.z8.server.engine;
 
 public interface IOFactory<T> {
-	public static final int OverridePriority = 1024;
-
 	Class<T> getSupportedClass();
 
 	/**
@@ -11,5 +9,13 @@ public interface IOFactory<T> {
 	 */
 	default int getPriority() {
 		return 0;
+	}
+
+	/**
+	 * Explicitly declares whether this factory has the authority to bypass and override 
+	 * the native platform serialization interfaces (JsonSerializable / RmiSerializable).
+	 */
+	default boolean overridesSerializable() {
+		return false;
 	}
 }
