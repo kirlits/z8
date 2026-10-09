@@ -12,6 +12,7 @@ import org.zenframework.z8.server.config.ServerConfig;
 import org.zenframework.z8.server.db.ConnectionManager;
 import org.zenframework.z8.server.engine.ApplicationServer;
 import org.zenframework.z8.server.engine.Session;
+import org.zenframework.z8.server.json.JsonIO;
 import org.zenframework.z8.server.json.parser.JsonObject;
 import org.zenframework.z8.server.logs.Trace;
 import org.zenframework.z8.server.request.Request;
@@ -90,7 +91,7 @@ public class MessageAcceptor {
 			if(logFile.exists() && logFile.length() > 0)
 				return;
 			JsonObject rootJson = new JsonObject();
-			rootJson.put("message", message.toJson());
+			rootJson.put("message", JsonIO.toJson(message));
 			rootJson.put("exception", thMessage);
 			byte[] bytes = rootJson.toString().getBytes(StandardCharsets.UTF_8);
 			java.nio.file.Files.write(logFile.toPath(), bytes);

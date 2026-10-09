@@ -128,26 +128,6 @@ public class TableRules implements RmiSerializable, Serializable {
 		defaultPolicy = (ImportPolicy) in.readObject();
 	}
 
-	public JsonObject toJson() {
-		JsonObject result = new JsonObject();
-		result.put(JsonDefaultPolicy, defaultPolicy.name());
-		JsonObject recordsObject = new JsonObject();
-		records.forEach((key, value) -> recordsObject.put(key.toString(), value.name()));
-		result.put(JsonRecords, recordsObject);
-		JsonObject fieldsObject = new JsonObject();
-		fields.forEach((key, value) -> fieldsObject.put(key, value.name()));
-		result.put(JsonFields, fieldsObject);
-		JsonObject recordFieldsObject = new JsonObject();
-		recordFields.forEach((key, value) -> {
-			JsonObject innerJson = new JsonObject();
-			value.forEach((innerKey, innerValue) -> innerJson.put(innerKey, innerValue.name()));
-			recordFieldsObject.put(key.toString(), innerJson);
-		});
-		result.put(JsonRecordFields, recordFieldsObject);
-
-		return result;
-	}
-
 	public static TableRules parseJson(JsonObject json) {
 		TableRules result = new TableRules(ImportPolicy.valueOf(json.getString(JsonDefaultPolicy)));
 

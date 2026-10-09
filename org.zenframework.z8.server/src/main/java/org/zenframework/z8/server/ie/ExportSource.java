@@ -144,14 +144,6 @@ public class ExportSource implements RmiSerializable, Serializable {
 		records = (Collection<guid>)in.readObject();
 	}
 
-	public JsonObject toJson() {
-		JsonObject result = new JsonObject();
-		result.put(JsonTableName, tableName);
-		result.put(JsonRecords, records);
-		result.put(JsonFields, fieldNames);
-		return result;
-	}
-
 	public static ExportSource parseJson(JsonObject json) {
 		ExportSource result = new ExportSource();
 		result.tableName = json.getString(JsonTableName);

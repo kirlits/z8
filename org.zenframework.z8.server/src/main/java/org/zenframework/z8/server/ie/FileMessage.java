@@ -146,12 +146,6 @@ public class FileMessage extends Message {
 	}
 
 	@Override
-	protected JsonObject fillSpecificJsonFields(JsonObject json) {
-		json.put(JsonFile, file.toJsonObject());
-		return json;
-	}
-
-	@Override
 	protected void initSpecificFields(JsonObject json) {
 		this.setFile(new file(json.getJsonObject(JsonFile)));
 	}

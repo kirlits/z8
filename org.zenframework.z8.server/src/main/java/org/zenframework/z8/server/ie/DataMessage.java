@@ -58,6 +58,10 @@ public class DataMessage extends Message {
 		super(container);
 	}
 
+	public String getDescription() {
+		return description.toString();
+	}
+
 	public String getType() {
 		return type;
 	}
@@ -286,15 +290,6 @@ public class DataMessage extends Message {
 			description.append(", ");
 
 		description.append(table.name() + ": " + recordsCount);
-	}
-
-	@Override
-	protected JsonObject fillSpecificJsonFields(JsonObject json) {
-		json.put(JsonType, type);
-		json.put(JsonDescription, description.toString());
-		json.put(JsonSource, source.toJson());
-
-		return json;
 	}
 
 	@Override

@@ -528,6 +528,10 @@ public class MessageSource implements RmiSerializable, Serializable {
 		this.files = files;
 	}
 
+	public boolean isSkipFiles() {
+		return skipFiles;
+	}
+
 	public void setSkipFiles(boolean skipFiles) {
 		this.skipFiles = skipFiles;
 	}
@@ -537,8 +541,8 @@ public class MessageSource implements RmiSerializable, Serializable {
 		source.setExportAll(json.getBoolean(JsonExportAll));
 		source.setSkipFiles(json.getBoolean(JsonSkipFiles));
 
-		JsonObject jsonProperties = json.getJsonObject(JsonProperties);
-		jsonProperties.keySet().forEach((key) -> source.properties.put(key, primary.parseJson(jsonProperties.getJsonObject(key))));
+		//JsonObject jsonProperties = json.getJsonObject(JsonProperties);
+		//jsonProperties.keySet().forEach((key) -> source.properties.put(key, primary.parseJson(jsonProperties.getJsonObject(key))));
 
 		JsonArray records = json.getJsonArray(JsonSources);
 		Collection<ExportSource> sources = new ArrayList<ExportSource>();
@@ -557,30 +561,6 @@ public class MessageSource implements RmiSerializable, Serializable {
 		Collection<RecordInfo> result = new ArrayList<RecordInfo>();
 		for(int i = 0; i < infos.size(); i++)
 			result.add(RecordInfo.parseJson(infos.getJsonObject(i)));
-		return result;
-	}
-
-	public JsonObject toJson() {
-		JsonObject result = new JsonObject();
-		result.put(JsonExportAll, exportAll);
-		result.put(JsonSkipFiles, skipFiles);
-		JsonObject jsonProperties = new JsonObject();
-		properties.forEach((key, value) -> jsonProperties.put(key, value.toJson()));
-		result.put(JsonProperties, jsonProperties);
-
-		JsonArray records = new JsonArray();
-		sources.forEach(src -> records.put(src.toJson()));
-		result.put(JsonSources, records);
-		result.put(JsonRules, exportRules.toJson());
-		result.put(JsonInserts, getRecordInfoJson(inserts));
-		result.put(JsonUpdates, getRecordInfoJson(updates));
-
-		return result;
-	}
-
-	private static JsonArray getRecordInfoJson(Collection<RecordInfo> infos) {
-		JsonArray result = new JsonArray();
-		infos.forEach(info -> result.put(info.toJson()));
 		return result;
 	}
 }

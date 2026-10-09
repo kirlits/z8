@@ -90,18 +90,6 @@ abstract public class Message extends OBJECT implements RmiSerializable, Seriali
 	private int failAction = Fail.getInt();
 
 	// JSON
-	public JsonObject toJson() {
-		JsonObject result = new JsonObject();
-		result.put(JsonId, getId());
-		result.put(JsonSender, getSender());
-		result.put(JsonAddress, getAddress());
-		result.put(JsonClass, getCLASS().name());
-
-		return fillSpecificJsonFields(result);
-	}
-
-	abstract protected JsonObject fillSpecificJsonFields(JsonObject json);
-
 	public static Message parseJson(JsonObject json) {
 		Message message = createInstance(json.getString(JsonClass), null);
 		message.initCommonFields(json);

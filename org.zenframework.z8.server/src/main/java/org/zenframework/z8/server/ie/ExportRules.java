@@ -87,17 +87,6 @@ public class ExportRules implements RmiSerializable, Serializable {
 		defaultPolicy = (ImportPolicy)in.readObject();
 	}
 
-	public JsonObject toJson() {
-		JsonObject result = new JsonObject();
-		result.put(JsonDefaultPolicy, defaultPolicy.name());
-	
-		JsonObject tableRules = new JsonObject();
-		tables.forEach((key, value) -> tableRules.put(key, value.toJson()));
-		result.put(JsonTableRules, tableRules);
-
-		return result;
-	}
-
 	public static ExportRules parseJson(JsonObject json) {
 		ExportRules result = new ExportRules();
 		result.add(ImportPolicy.valueOf(json.getString(JsonDefaultPolicy)));

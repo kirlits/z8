@@ -34,13 +34,13 @@ public final class IOFactoryManager<F extends IOFactory<?>> {
 			this.spiFactories = Collections.unmodifiableMap(staticLoad(factoryInterface));
 	}
 
-	//@SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked")
 	private Map<Class<?>, F> staticLoad(Class<F> factoryInterface) {
 		Map<Class<?>, F> map = new HashMap<>();
 
-		/*if (factoryInterface.equals(JsonFactory.class)) {
+		if (factoryInterface.equals(JsonFactory.class)) {
 			map.put(Message.class, (F) new MessageJsonFactory());
-		}*/
+		}
 
 		return map;
 	}
