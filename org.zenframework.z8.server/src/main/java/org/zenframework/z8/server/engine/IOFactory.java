@@ -1,6 +1,8 @@
 package org.zenframework.z8.server.engine;
 
 public interface IOFactory<T> {
+	public static final int OverridePriority = 1024;
+
 	Class<T> getSupportedClass();
 
 	/**

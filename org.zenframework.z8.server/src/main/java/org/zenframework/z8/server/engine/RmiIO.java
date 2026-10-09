@@ -291,6 +291,10 @@ public class RmiIO extends ObjectIO {
 		} else if(object instanceof OBJECT) {
 			writeByte(out, RmiIOType.OBJECT);
 			writeOBJECT(out, (OBJECT)object);
+		} else if(rmiFactory != null && rmiFactory.getPriority() >= IOFactory.OverridePriority) {
+			writeByte(out, RmiIOType.FactoryObject); 
+			writeString(out, objectClass.getName());
+			rmiFactory.toRmi(object, out);
 		} else if(object instanceof RmiSerializable) {
 			writeByte(out, RmiIOType.Self);
 			writeSerializable(out, (RmiSerializable)object);

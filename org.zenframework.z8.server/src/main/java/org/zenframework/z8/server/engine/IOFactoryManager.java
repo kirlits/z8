@@ -10,23 +10,11 @@ public final class IOFactoryManager<F extends IOFactory<?>> {
 	private static final Object NullMarker = new Object();
 	
 	@SuppressWarnings("rawtypes")
-	private static final Map<Class<?>, IOFactoryManager> managers = new HashMap<>();
+	private static final Map<Class<?>, IOFactoryManager> managers = new ConcurrentHashMap<>();
 
 	@SuppressWarnings("unchecked")
 	public static <I extends IOFactory<?>> IOFactoryManager<I> getInstance(Class<I> factoryInterface) {
-		IOFactoryManager<I> result = (IOFactoryManager<I>) managers.get(factoryInterface);
-
-		if (result == null) {
-			synchronized (managers) {
-				result = (IOFactoryManager<I>) managers.get(factoryInterface);
-
-				if (result == null) {
-					result = new IOFactoryManager<>(factoryInterface);
-					managers.put(factoryInterface, result);
-				}
-			}
-		}
-		return result;
+		return (IOFactoryManager<I>) managers.computeIfAbsent(factoryInterface, cls -> new IOFactoryManager<>((Class<IOFactory<?>>) cls));
 	}
 
 	// --- INTERNAL DISPATCHER INFRASTRUCTURE ---
@@ -35,8 +23,9 @@ public final class IOFactoryManager<F extends IOFactory<?>> {
 	private final Map<Class<?>, Object> factoryCache = new ConcurrentHashMap<>();
 
 	private IOFactoryManager(Class<F> factoryInterface) {
-		Map<Class<?>, F> map = new HashMap<>();
 		ServiceLoader<F> loader = ServiceLoader.load(factoryInterface);
+		Map<Class<?>, F> winners = new HashMap<>();
+		Map<Class<?>, F> runners = new HashMap<>();
 
 		for (F factory : loader) {
 			Class<?> supportedClass = factory.getSupportedClass();
@@ -44,21 +33,36 @@ public final class IOFactoryManager<F extends IOFactory<?>> {
 				continue;
 			}
 
-			if (map.containsKey(supportedClass)) {
-				F existingFactory = map.get(supportedClass);
-				if (factory.getPriority() > existingFactory.getPriority()) {
-					map.put(supportedClass, factory);
-				} else if (factory.getPriority() == existingFactory.getPriority()) {
-					throw new IllegalStateException("IOFactory collision detected for class " 
-							+ supportedClass.getName() + " with identical priority (" + factory.getPriority() + "). "
-							+ "Conflict between: " + existingFactory.getClass().getName() 
-							+ " and " + factory.getClass().getName());
-				}
-			} else {
-				map.put(supportedClass, factory);
+			F winner = winners.get(supportedClass);
+			F runner = runners.get(supportedClass);
+
+			if (winner == null) {
+				winners.put(supportedClass, factory);
+			} else if (factory.getPriority() > winner.getPriority()) {
+				runners.put(supportedClass, winner);
+				winners.put(supportedClass, factory);
+			} else if (runner == null || factory.getPriority() > runner.getPriority()) {
+				runners.put(supportedClass, factory);
 			}
 		}
-		this.spiFactories = Collections.unmodifiableMap(map);
+	
+		Map<Class<?>, F> resolvedMap = new HashMap<>();
+		for (Map.Entry<Class<?>, F> entry : winners.entrySet()) {
+			Class<?> supportedClass = entry.getKey();
+			F winner = entry.getValue();
+			F runnerUp = runners.get(supportedClass);
+
+			if (runnerUp != null && winner.getPriority() == runnerUp.getPriority()) {
+				throw new IllegalStateException("IOFactory collision detected for class " 
+						+ supportedClass.getName() + " with identical priority (" + winner.getPriority() + "). "
+						+ "Conflict between: " + winner.getClass().getName() 
+						+ " and " + runnerUp.getClass().getName());
+			}
+
+			resolvedMap.put(supportedClass, winner);
+		}
+
+		this.spiFactories = Collections.unmodifiableMap(resolvedMap);
 	}
 
 	private boolean isNull(Object f) {

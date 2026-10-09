@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.zenframework.z8.server.engine.IOFactory;
 import org.zenframework.z8.server.engine.IOFactoryManager;
 import org.zenframework.z8.server.json.parser.JsonArray;
 import org.zenframework.z8.server.json.parser.JsonObject;
@@ -119,6 +120,8 @@ public class JsonIO {
 			json.put(JsonValue, object.toString());
 
 			// --- Custom Serializable Entities ---
+		} else if (objectFactory != null && objectFactory.getPriority() >= JsonFactory.OverridePriority) {
+			json.put(JsonValue, objectFactory.toJson(object));
 		} else if (object instanceof JsonSerializable) {
 			json.put(JsonValue, ((JsonSerializable) object).toJson());
 		} else if (objectFactory != null) {
@@ -200,6 +203,9 @@ public class JsonIO {
 				return clazz.cast(newObject(className, new Class<?>[] { String.class }, new Object[] { rawValue }));
 
 				// --- Custom Serializable Entities ---
+			} else if (objectFactory != null && objectFactory.getPriority() >= IOFactory.OverridePriority) {
+				JsonObject value = json.getJsonObject(JsonValue);
+				return objectFactory.fromJson(value);
 			} else if (JsonSerializable.class.isAssignableFrom(clazz)) {
 				Object instance = newObject(className, null, null);
 				JsonObject value = json.getJsonObject(JsonValue);
