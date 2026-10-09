@@ -4,8 +4,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class IOFactoryManager<F extends IOFactory<?>> {
+	private static final Object NullMarker = new Object();
+	
 	@SuppressWarnings("rawtypes")
 	private static final Map<Class<?>, IOFactoryManager> managers = new HashMap<>();
 
@@ -13,9 +16,7 @@ public final class IOFactoryManager<F extends IOFactory<?>> {
 	public static <I extends IOFactory<?>> IOFactoryManager<I> getInstance(Class<I> factoryInterface) {
 		IOFactoryManager<I> result = (IOFactoryManager<I>) managers.get(factoryInterface);
 
-		// First check (No synchronization overhead for 99.9% of requests)
 		if (result == null) {
-			// Synchronize strictly on the class registry map during initialization
 			synchronized (managers) {
 				result = (IOFactoryManager<I>) managers.get(factoryInterface);
 
@@ -31,7 +32,7 @@ public final class IOFactoryManager<F extends IOFactory<?>> {
 	// --- INTERNAL DISPATCHER INFRASTRUCTURE ---
 
 	private final Map<Class<?>, F> spiFactories;
-	private final Map<Class<?>, F> factoryCache = Collections.synchronizedMap(new HashMap<>());
+	private final Map<Class<?>, Object> factoryCache = new ConcurrentHashMap<>();
 
 	private IOFactoryManager(Class<F> factoryInterface) {
 		Map<Class<?>, F> map = new HashMap<>();
@@ -60,21 +61,30 @@ public final class IOFactoryManager<F extends IOFactory<?>> {
 		this.spiFactories = Collections.unmodifiableMap(map);
 	}
 
+	private boolean isNull(Object f) {
+		return f == null || f == NullMarker;
+	}
+
+	@SuppressWarnings("unchecked")
+	private F getFactory(Object obj) {
+		return isNull(obj) ? null : (F)obj;
+	}
+
 	public F getFactory(Class<?> currentClass) {
 		if (factoryCache.containsKey(currentClass)) {
-			return factoryCache.get(currentClass);
+			return getFactory(factoryCache.get(currentClass));
 		}
 
 		F factory = null;
-		for (Class<?> clazz = currentClass; clazz != null && clazz != Object.class && factory == null; clazz = clazz.getSuperclass()) {
+		for (Class<?> clazz = currentClass; clazz != null && clazz != Object.class && isNull(factory); clazz = clazz.getSuperclass()) {
 			if (factoryCache.containsKey(clazz)) {
-				factory = factoryCache.get(clazz);
+				factory = getFactory(factoryCache.get(clazz));
 				break;
 			}
 			factory = spiFactories.get(clazz);
 		}
 
-		factoryCache.put(currentClass, factory);
+		factoryCache.put(currentClass, isNull(factory) ? NullMarker : factory);
 		return factory;
 	}
 }
