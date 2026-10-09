@@ -6,6 +6,11 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.zenframework.z8.server.config.ServerConfig;
+import org.zenframework.z8.server.ie.Message;
+import org.zenframework.z8.server.ie.MessageJsonFactory;
+import org.zenframework.z8.server.json.JsonFactory;
+
 public final class IOFactoryManager<F extends IOFactory<?>> {
 	private static final Object NullMarker = new Object();
 	
@@ -23,6 +28,24 @@ public final class IOFactoryManager<F extends IOFactory<?>> {
 	private final Map<Class<?>, Object> factoryCache = new ConcurrentHashMap<>();
 
 	private IOFactoryManager(Class<F> factoryInterface) {
+		if (ServerConfig.shouldDynamicallyLoadIOFactories())
+			this.spiFactories = Collections.unmodifiableMap(dynamicalLoad(factoryInterface));
+		else
+			this.spiFactories = Collections.unmodifiableMap(staticLoad(factoryInterface));
+	}
+
+	//@SuppressWarnings("unchecked")
+	private Map<Class<?>, F> staticLoad(Class<F> factoryInterface) {
+		Map<Class<?>, F> map = new HashMap<>();
+
+		/*if (factoryInterface.equals(JsonFactory.class)) {
+			map.put(Message.class, (F) new MessageJsonFactory());
+		}*/
+
+		return map;
+	}
+
+	private Map<Class<?>, F> dynamicalLoad(Class<F> factoryInterface) {
 		ServiceLoader<F> loader = ServiceLoader.load(factoryInterface);
 		Map<Class<?>, F> winners = new HashMap<>();
 		Map<Class<?>, F> runners = new HashMap<>();
@@ -62,7 +85,7 @@ public final class IOFactoryManager<F extends IOFactory<?>> {
 			resolvedMap.put(supportedClass, winner);
 		}
 
-		this.spiFactories = Collections.unmodifiableMap(resolvedMap);
+		return resolvedMap;
 	}
 
 	private boolean isNull(Object f) {

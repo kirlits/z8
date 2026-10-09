@@ -158,6 +158,8 @@ public class ServerConfig extends Config {
 	static final private String MonitoringServerPort = "monitoring.server.port";
 	static final private String MonitoringServerThreads = "monitoring.server.threads";
 
+	static final private String ShouldDynamicallyLoadIOFactories = "io.factories.dynamical";
+
 	static private File configPath;
 	static private File workingPath;
 	static private File applicationPath;
@@ -291,6 +293,8 @@ public class ServerConfig extends Config {
 	static private IAuthorityCenter authorityCenter;
 	static private IInterconnectionCenter interconnectionCenter;
 	static private IWebServer webServer;
+	
+	private static boolean shouldDynamicallyLoadIOFactories;
 
 	private ServerConfig() {}
 
@@ -446,6 +450,8 @@ public class ServerConfig extends Config {
 		monitoringServerProvider = instance.getProperty(MonitoringServerProvider, "sun.net.httpserver.DefaultHttpServerProvider");
 		monitoringServerPort = instance.getProperty(MonitoringServerPort, 9800);
 		monitoringServerThreads = instance.getProperty(MonitoringServerThreads, 3);
+
+		shouldDynamicallyLoadIOFactories = instance.getProperty(ShouldDynamicallyLoadIOFactories, false);
 	}
 
 	static private File getApplicationPath(File defaultValue) throws IOException {
@@ -949,6 +955,10 @@ public class ServerConfig extends Config {
 		if(webServer == null)
 			webServer = Rmi.get(IWebServer.class, Rmi.localhost, webServerPort());
 		return webServer;
+	}
+
+	static public boolean shouldDynamicallyLoadIOFactories() {
+		return shouldDynamicallyLoadIOFactories;
 	}
 
 }
