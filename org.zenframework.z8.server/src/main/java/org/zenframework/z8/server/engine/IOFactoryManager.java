@@ -35,11 +35,26 @@ public final class IOFactoryManager<F extends IOFactory<?>> {
 
 	private IOFactoryManager(Class<F> factoryInterface) {
 		Map<Class<?>, F> map = new HashMap<>();
-
 		ServiceLoader<F> loader = ServiceLoader.load(factoryInterface);
+
 		for (F factory : loader) {
-			if (factory.getSupportedClass() != null) {
-				map.put(factory.getSupportedClass(), factory);
+			Class<?> supportedClass = factory.getSupportedClass();
+			if (supportedClass == null) {
+				continue;
+			}
+
+			if (map.containsKey(supportedClass)) {
+				F existingFactory = map.get(supportedClass);
+				if (factory.getPriority() > existingFactory.getPriority()) {
+					map.put(supportedClass, factory);
+				} else if (factory.getPriority() == existingFactory.getPriority()) {
+					throw new IllegalStateException("IOFactory collision detected for class " 
+							+ supportedClass.getName() + " with identical priority (" + factory.getPriority() + "). "
+							+ "Conflict between: " + existingFactory.getClass().getName() 
+							+ " and " + factory.getClass().getName());
+				}
+			} else {
+				map.put(supportedClass, factory);
 			}
 		}
 		this.spiFactories = Collections.unmodifiableMap(map);
