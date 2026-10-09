@@ -7,9 +7,6 @@ import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.zenframework.z8.server.config.ServerConfig;
-import org.zenframework.z8.server.ie.Message;
-import org.zenframework.z8.server.ie.MessageJsonFactory;
-import org.zenframework.z8.server.json.JsonFactory;
 
 public final class IOFactoryManager<F extends IOFactory<?>> {
 	private static final Object NullMarker = new Object();
@@ -38,8 +35,8 @@ public final class IOFactoryManager<F extends IOFactory<?>> {
 	private Map<Class<?>, F> staticLoad(Class<F> factoryInterface) {
 		Map<Class<?>, F> map = new HashMap<>();
 
-		if (factoryInterface.equals(JsonFactory.class)) {
-			map.put(Message.class, (F) new MessageJsonFactory());
+		if (factoryInterface.equals(org.zenframework.z8.server.json.JsonFactory.class)) {
+			map.put(org.zenframework.z8.server.ie.Message.class, (F) new org.zenframework.z8.server.ie.MessageJsonFactory());
 		}
 
 		return map;
