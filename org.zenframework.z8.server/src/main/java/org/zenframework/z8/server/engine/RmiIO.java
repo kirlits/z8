@@ -494,7 +494,7 @@ public class RmiIO extends ObjectIO {
 		if (rmiFactory == null) {
 			throw new IOException("RmiIO: Dynamic RmiFactory not found for registered SPI class: " + cls);
 		}
-		return rmiFactory.fromRmi(in);
+		return rmiFactory.fromRmi(in, clazz);
 	}
 
 	static public primary readPrimary(ObjectInputStream in) throws IOException, ClassNotFoundException {

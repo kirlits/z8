@@ -292,10 +292,4 @@ public class DataMessage extends Message {
 		description.append(table.name() + ": " + recordsCount);
 	}
 
-	@Override
-	protected void initSpecificFields(JsonObject json) {
-		this.setType(json.getString(JsonType));
-		this.setDescription(json.getString(JsonDescription));
-		this.setSource(MessageSource.parseJson(json.getJsonObject(JsonSource)));
-	}
 }

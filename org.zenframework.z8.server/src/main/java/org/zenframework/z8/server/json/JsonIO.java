@@ -204,7 +204,7 @@ public class JsonIO {
 				// --- Custom Serializable Entities ---
 			} else if (objectFactory != null && objectFactory.overridesSerializable()) {
 				JsonObject value = json.getJsonObject(JsonValue);
-				return objectFactory.fromJson(value);
+				return objectFactory.fromJson(value, clazz);
 			} else if (JsonSerializable.class.isAssignableFrom(clazz)) {
 				Object instance = newObject(className, null, null);
 				JsonObject value = json.getJsonObject(JsonValue);
@@ -212,7 +212,7 @@ public class JsonIO {
 				return instance;
 			} else if (objectFactory != null) {
 				JsonObject value = json.getJsonObject(JsonValue);
-				return objectFactory.fromJson(value);
+				return objectFactory.fromJson(value, clazz);
 
 				// --- Arrays, Collections, Maps ---
 			} else if (clazz.isArray()) {

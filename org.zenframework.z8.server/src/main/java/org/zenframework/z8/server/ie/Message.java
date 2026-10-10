@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.lang.reflect.Constructor;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -26,7 +25,6 @@ import org.zenframework.z8.server.engine.Database;
 import org.zenframework.z8.server.engine.RmiIO;
 import org.zenframework.z8.server.engine.RmiSerializable;
 import org.zenframework.z8.server.engine.Session;
-import org.zenframework.z8.server.json.parser.JsonObject;
 import org.zenframework.z8.server.logs.Trace;
 import org.zenframework.z8.server.request.IRequest;
 import org.zenframework.z8.server.request.Request;
@@ -88,35 +86,6 @@ abstract public class Message extends OBJECT implements RmiSerializable, Seriali
 	private String sender;
 	private String address;
 	private int failAction = Fail.getInt();
-
-	// JSON
-	public static Message parseJson(JsonObject json) {
-		Message message = createInstance(json.getString(JsonClass), null);
-		message.initCommonFields(json);
-		message.initSpecificFields(json);
-
-		return message;
-	}
-
-	abstract protected void initSpecificFields(JsonObject json);
-
-	private void initCommonFields(JsonObject json) {
-		this.setId(json.getGuid(JsonId));
-		this.setSender(json.getString(JsonSender));
-		this.setAddress(json.getString(JsonAddress));
-	}
-
-	private static Message createInstance(String className, IObject container) {
-		try {
-			Class<?> clazz = Class.forName(className);
-			Constructor<?> constructor = clazz.getDeclaredConstructor(IObject.class);
-			Object instance = constructor.newInstance(container);
-			return Message.class.cast(instance);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-	// JSON ENDS
 
 	abstract public void setBytesTransferred(long bytesTransferred);
 

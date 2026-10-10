@@ -9,14 +9,10 @@ import java.util.Map;
 
 import org.zenframework.z8.server.engine.RmiIO;
 import org.zenframework.z8.server.engine.RmiSerializable;
-import org.zenframework.z8.server.json.parser.JsonObject;
 import org.zenframework.z8.server.types.guid;
 
 public class ExportRules implements RmiSerializable, Serializable {
 	private static final long serialVersionUID = -1372906719057513100L;
-
-	private static final String JsonDefaultPolicy = "defaultPolicy";
-	private static final String JsonTableRules = "tables";
 
 	private Map<String, TableRules> tables = new HashMap<String, TableRules>();
 	private ImportPolicy defaultPolicy = ImportPolicy.Default;
@@ -85,17 +81,5 @@ public class ExportRules implements RmiSerializable, Serializable {
 
 		tables = (Map<String, TableRules>)in.readObject();
 		defaultPolicy = (ImportPolicy)in.readObject();
-	}
-
-	public static ExportRules parseJson(JsonObject json) {
-		ExportRules result = new ExportRules();
-		result.add(ImportPolicy.valueOf(json.getString(JsonDefaultPolicy)));
-
-		JsonObject tableRules = json.getJsonObject(JsonTableRules);
-		Map<String, TableRules> tables = new HashMap<String, TableRules>();
-		tableRules.keySet().forEach(key -> tables.put(key, TableRules.parseJson(tableRules.getJsonObject(key))));
-		result.tables = tables;
-
-		return result;
 	}
 }

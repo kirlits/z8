@@ -24,7 +24,6 @@ import org.zenframework.z8.server.engine.RmiIO;
 import org.zenframework.z8.server.engine.RmiSerializable;
 import org.zenframework.z8.server.engine.Runtime;
 import org.zenframework.z8.server.json.parser.JsonArray;
-import org.zenframework.z8.server.json.parser.JsonObject;
 import org.zenframework.z8.server.runtime.RCollection;
 import org.zenframework.z8.server.security.BuiltinUsers;
 import org.zenframework.z8.server.types.file;
@@ -36,14 +35,6 @@ import org.zenframework.z8.server.types.sql.sql_bool;
 public class MessageSource implements RmiSerializable, Serializable {
 	// MARK - в новой версии serialVersionUID кончается на 9, а не 8
 	private static final long serialVersionUID = -145929531248527278L;
-
-	public static final String JsonExportAll = "exportAll";
-	public static final String JsonSkipFiles = "skipFiles";
-	public static final String JsonProperties = "properties";
-	public static final String JsonInserts = "inserts";
-	public static final String JsonUpdates = "updates";
-	public static final String JsonSources = "data";
-	public static final String JsonRules= "rules";
 
 	private static class Cache {
 		final Map<String, Table> tables = new HashMap<String, Table>();
@@ -536,31 +527,4 @@ public class MessageSource implements RmiSerializable, Serializable {
 		this.skipFiles = skipFiles;
 	}
 	
-	public static MessageSource parseJson(JsonObject json) {
-		MessageSource source = new MessageSource();
-		source.setExportAll(json.getBoolean(JsonExportAll));
-		source.setSkipFiles(json.getBoolean(JsonSkipFiles));
-
-		//JsonObject jsonProperties = json.getJsonObject(JsonProperties);
-		//jsonProperties.keySet().forEach((key) -> source.properties.put(key, primary.parseJson(jsonProperties.getJsonObject(key))));
-
-		JsonArray records = json.getJsonArray(JsonSources);
-		Collection<ExportSource> sources = new ArrayList<ExportSource>();
-		for(int i = 0; i < records.size(); i++)
-			sources.add(ExportSource.parseJson(records.getJsonObject(i)));
-		source.sources = sources;
-
-		source.exportRules = ExportRules.parseJson(json.getJsonObject(JsonRules));
-		source.setInserts(parseRecordInfoJson(json.getJsonArray(JsonInserts)));
-		source.setUpdates(parseRecordInfoJson(json.getJsonArray(JsonUpdates)));
-
-		return source;
-	}
-
-	private static Collection<RecordInfo> parseRecordInfoJson(JsonArray infos) {
-		Collection<RecordInfo> result = new ArrayList<RecordInfo>();
-		for(int i = 0; i < infos.size(); i++)
-			result.add(RecordInfo.parseJson(infos.getJsonObject(i)));
-		return result;
-	}
 }
